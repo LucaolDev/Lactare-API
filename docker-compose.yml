@@ -1,0 +1,13 @@
+services:
+  lactare-api:
+    build: .
+    container_name: lactare-connect-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    volumes:
+      - lactare-data:/opt/app/data
+
+volumes:
+  lactare-data:
