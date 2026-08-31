@@ -34,19 +34,32 @@ Os controllers não acessam repositories diretamente. As entidades persistidas t
 
 Requisitos: Docker Desktop instalado e em execução.
 
-Na raiz do projeto:
+Na raiz do projeto, construa a imagem e inicialize o container da aplicação:
 
 ```bash
+docker compose build
 docker compose up --build
 ```
 
 A API ficará disponível em `http://localhost:8080`.
+
+O banco utilizado é o H2 em arquivo, executado dentro do próprio container; não é necessário
+iniciar um segundo container de banco. O volume `lactare-data` é criado automaticamente pelo
+Docker Compose.
+
+Para acompanhar os logs em outra janela:
+
+```bash
+docker compose logs -f lactare-api
+```
 
 Para interromper os containers:
 
 ```bash
 docker compose down
 ```
+
+Esse comando interrompe e remove o container, preservando os dados do volume.
 
 Para interromper e remover também o volume de dados:
 
@@ -99,6 +112,7 @@ Todos os endpoints da API estão versionados com `/api/v1`.
 | Nutrizes | `GET/POST /api/v1/nutrizes`, `GET/PUT/DELETE /api/v1/nutrizes/{id}` |
 | Impacto da nutriz | `GET /api/v1/nutrizes/{id}/impacto` |
 | BLHs | `GET/POST /api/v1/blhs`, `GET/PUT/DELETE /api/v1/blhs/{id}` |
+| Matching geográfico | `GET /api/v1/blhs/matching?latitude=-23.55&longitude=-46.63&limite=3` |
 | Quiz | `GET/POST /api/v1/quiz-respostas`, `GET/DELETE /api/v1/quiz-respostas/{id}` |
 | Agendamentos | `GET/POST /api/v1/agendamentos`, `GET/PUT/DELETE /api/v1/agendamentos/{id}` |
 | Status do agendamento | `PATCH /api/v1/agendamentos/{id}/status?status=CONFIRMADO` |
@@ -113,6 +127,7 @@ Filtros disponíveis:
 ```text
 GET /api/v1/nutrizes?status=ATIVA
 GET /api/v1/blhs?cidade=São Paulo
+GET /api/v1/blhs/matching?latitude=-23.55&longitude=-46.63&limite=3
 GET /api/v1/quiz-respostas?nutrizId=1
 GET /api/v1/agendamentos?nutrizId=1
 GET /api/v1/doacoes?nutrizId=1
@@ -178,6 +193,27 @@ curl -X POST http://localhost:8080/api/v1/doacoes \
   }'
 ```
 
+Encontrar BLHs próximos:
+
+```bash
+curl "http://localhost:8080/api/v1/blhs/matching?latitude=-23.55&longitude=-46.63&limite=3"
+```
+
+O matching considera somente BLHs ativos que possuem latitude e longitude cadastradas,
+calcula a distância em quilômetros e retorna os resultados mais próximos em ordem crescente.
+
+## Correspondência da solução
+
+| Necessidade da solução | Implementação |
+|---|---|
+| Cadastro de nutrizes | `/api/v1/nutrizes` |
+| Quiz de elegibilidade | `/api/v1/quiz-respostas` |
+| Matching com bancos de leite | `/api/v1/blhs/matching` |
+| Agendamento de coleta | `/api/v1/agendamentos` |
+| Registro de doação e impacto | `/api/v1/doacoes` e `/api/v1/nutrizes/{id}/impacto` |
+| Campanhas de comunicação | `/api/v1/campanhas` e `/api/v1/campanhas/{id}/disparar` |
+| Priorização por score | `/api/v1/ia-preditiva` |
+
 ## Validação e erros
 
 Os dados recebidos são validados com Bean Validation. Respostas inválidas retornam `422` com a lista de campos e mensagens. Também são tratados:
@@ -193,6 +229,12 @@ Executar os testes:
 
 ```bash
 ./mvnw test
+```
+
+No Windows PowerShell:
+
+```powershell
+.\mvnw.cmd test
 ```
 
 Gerar o pacote:

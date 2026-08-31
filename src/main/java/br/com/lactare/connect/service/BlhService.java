@@ -2,6 +2,7 @@ package br.com.lactare.connect.service;
 
 import br.com.lactare.connect.dto.BlhRequest;
 import br.com.lactare.connect.dto.BlhResponse;
+import br.com.lactare.connect.dto.BlhMatchingResponse;
 import br.com.lactare.connect.entity.Blh;
 import br.com.lactare.connect.exception.ResourceNotFoundException;
 import br.com.lactare.connect.repository.BlhRepository;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Comparator;
 
 @Service
 public class BlhService {
@@ -25,6 +27,33 @@ public class BlhService {
                 ? repository.findByAtivoTrueOrderByNome()
                 : repository.findByAtivoTrueAndCidadeIgnoreCaseOrderByNome(cidade);
         return entities.stream().map(BlhResponse::new).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BlhMatchingResponse> findNearest(double latitude, double longitude, int limite) {
+        return repository.findByAtivoTrueOrderByNome().stream()
+                .filter(blh -> blh.getLatitude() != null && blh.getLongitude() != null)
+                .map(blh -> new BlhMatchingResponse(
+                        new BlhResponse(blh),
+                        roundDistance(distanceInKm(latitude, longitude, blh.getLatitude(), blh.getLongitude()))))
+                .sorted(Comparator.comparingDouble(BlhMatchingResponse::distanciaKm))
+                .limit(limite)
+                .toList();
+    }
+
+    private double distanceInKm(double latitude1, double longitude1,
+                                double latitude2, double longitude2) {
+        double earthRadiusKm = 6371.0;
+        double latitudeDistance = Math.toRadians(latitude2 - latitude1);
+        double longitudeDistance = Math.toRadians(longitude2 - longitude1);
+        double a = Math.sin(latitudeDistance / 2) * Math.sin(latitudeDistance / 2)
+                + Math.cos(Math.toRadians(latitude1)) * Math.cos(Math.toRadians(latitude2))
+                * Math.sin(longitudeDistance / 2) * Math.sin(longitudeDistance / 2);
+        return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    private double roundDistance(double distanceKm) {
+        return Math.round(distanceKm * 100.0) / 100.0;
     }
 
     @Transactional(readOnly = true)

@@ -9,7 +9,7 @@ public record ScorePropensaoResponse(
         Long id,
         Long nutrizId,
         String nutrizNome,
-        String regiao,
+        String estado,
         Integer semanasPosParto,
         Integer score,
         PrioridadeIa prioridade,

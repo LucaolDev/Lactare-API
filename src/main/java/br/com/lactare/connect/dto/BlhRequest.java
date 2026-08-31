@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 
 public record BlhRequest(
         @NotBlank(message = "Nome é obrigatório")
@@ -37,7 +39,11 @@ public record BlhRequest(
         String horarioFuncionamento,
         @NotNull(message = "Informe se o BLH aceita coleta domiciliar")
         Boolean aceitaColetaDomiciliar,
+        @DecimalMin(value = "-90", message = "Latitude deve ser maior ou igual a -90")
+        @DecimalMax(value = "90", message = "Latitude deve ser menor ou igual a 90")
         Double latitude,
+        @DecimalMin(value = "-180", message = "Longitude deve ser maior ou igual a -180")
+        @DecimalMax(value = "180", message = "Longitude deve ser menor ou igual a 180")
         Double longitude,
         Boolean ativo
 ) {
