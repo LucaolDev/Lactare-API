@@ -3,6 +3,7 @@ package br.com.lactare.connect.service;
 import br.com.lactare.connect.dto.NutrizRequest;
 import br.com.lactare.connect.dto.NutrizResponse;
 import br.com.lactare.connect.entity.Nutriz;
+import br.com.lactare.connect.entity.NutrizStatus;
 import br.com.lactare.connect.exception.BusinessException;
 import br.com.lactare.connect.exception.ResourceNotFoundException;
 import br.com.lactare.connect.repository.NutrizRepository;
@@ -61,6 +62,19 @@ class NutrizServiceTest {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.findById(99L));
+    }
+
+    @Test
+    void deveInativarNutrizSemExcluirRegistro() {
+        Nutriz nutriz = new Nutriz();
+        nutriz.setId(1L);
+        nutriz.setStatus(NutrizStatus.ATIVA);
+        when(repository.findById(1L)).thenReturn(Optional.of(nutriz));
+
+        service.delete(1L);
+
+        assertEquals(NutrizStatus.INATIVA, nutriz.getStatus());
+        verify(repository, never()).delete(any(Nutriz.class));
     }
 
     private NutrizRequest requestPadrao() {

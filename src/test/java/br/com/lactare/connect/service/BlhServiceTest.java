@@ -12,7 +12,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class BlhServiceTest {
@@ -47,6 +50,18 @@ class BlhServiceTest {
         List<BlhMatchingResponse> result = service.findNearest(-23.55, -46.63, 3);
 
         assertEquals(0, result.size());
+    }
+
+    @Test
+    void deveInativarBlhSemExcluirRegistro() {
+        Blh blh = blh(1L, -23.55, -46.63);
+        blh.setAtivo(true);
+        when(repository.findById(1L)).thenReturn(java.util.Optional.of(blh));
+
+        service.delete(1L);
+
+        assertEquals(false, blh.getAtivo());
+        verify(repository, never()).delete(any(Blh.class));
     }
 
     private Blh blh(Long id, Double latitude, Double longitude) {

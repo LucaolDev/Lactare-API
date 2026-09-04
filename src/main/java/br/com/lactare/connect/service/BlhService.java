@@ -4,6 +4,7 @@ import br.com.lactare.connect.dto.BlhRequest;
 import br.com.lactare.connect.dto.BlhResponse;
 import br.com.lactare.connect.dto.BlhMatchingResponse;
 import br.com.lactare.connect.entity.Blh;
+import br.com.lactare.connect.exception.BusinessException;
 import br.com.lactare.connect.exception.ResourceNotFoundException;
 import br.com.lactare.connect.repository.BlhRepository;
 import org.springframework.stereotype.Service;
@@ -77,12 +78,21 @@ public class BlhService {
 
     @Transactional
     public void delete(Long id) {
-        repository.delete(getEntity(id));
+        Blh entity = getEntity(id);
+        entity.setAtivo(false);
     }
 
     public Blh getEntity(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("BLH não encontrado. ID: " + id));
+    }
+
+    public Blh getActiveEntity(Long id) {
+        Blh entity = getEntity(id);
+        if (!Boolean.TRUE.equals(entity.getAtivo())) {
+            throw new BusinessException("O BLH informado está inativo");
+        }
+        return entity;
     }
 
     private void copy(BlhRequest request, Blh entity) {

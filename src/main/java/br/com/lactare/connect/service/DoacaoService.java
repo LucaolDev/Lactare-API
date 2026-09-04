@@ -45,14 +45,18 @@ public class DoacaoService {
 
     @Transactional
     public DoacaoResponse save(DoacaoRequest request) {
-        Nutriz nutriz = nutrizService.getEntity(request.nutrizId());
-        Blh blh = blhService.getEntity(request.blhId());
+        Nutriz nutriz = nutrizService.getActiveEntity(request.nutrizId());
+        Blh blh = blhService.getActiveEntity(request.blhId());
         Agendamento agendamento = null;
         if (request.agendamentoId() != null) {
             agendamento = agendamentoRepository.findById(request.agendamentoId())
                     .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado. ID: " + request.agendamentoId()));
             if (!agendamento.getNutriz().getId().equals(nutriz.getId()) || !agendamento.getBlh().getId().equals(blh.getId())) {
                 throw new BusinessException("Agendamento não pertence à nutriz e ao BLH informados");
+            }
+            if (agendamento.getStatus() == AgendamentoStatus.CANCELADO
+                    || agendamento.getStatus() == AgendamentoStatus.CONCLUIDO) {
+                throw new BusinessException("O agendamento informado não está disponível para registro de doação");
             }
             agendamento.setStatus(AgendamentoStatus.CONCLUIDO);
         }

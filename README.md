@@ -122,6 +122,9 @@ Todos os endpoints da API estão versionados com `/api/v1`.
 | IA preditiva | `GET/POST /api/v1/ia-preditiva`, `GET/PUT/DELETE /api/v1/ia-preditiva/{id}` |
 | Dashboard | `GET /api/v1/dashboard` |
 
+As exclusões de nutrizes e BLHs são inativações lógicas para preservar agendamentos,
+doações e o histórico da solução. Esses registros deixam de aparecer nas listagens ativas.
+
 Filtros disponíveis:
 
 ```text

@@ -23,7 +23,9 @@ public class NutrizService {
 
     @Transactional(readOnly = true)
     public List<NutrizResponse> findAll(NutrizStatus status) {
-        List<Nutriz> entities = status == null ? repository.findAll() : repository.findByStatusOrderByNome(status);
+        List<Nutriz> entities = status == null
+                ? repository.findByStatusOrderByNome(NutrizStatus.ATIVA)
+                : repository.findByStatusOrderByNome(status);
         return entities.stream().map(NutrizResponse::new).toList();
     }
 
@@ -57,12 +59,20 @@ public class NutrizService {
     @Transactional
     public void delete(Long id) {
         Nutriz entity = getEntity(id);
-        repository.delete(entity);
+        entity.setStatus(NutrizStatus.INATIVA);
     }
 
     public Nutriz getEntity(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Nutriz não encontrada. ID: " + id));
+    }
+
+    public Nutriz getActiveEntity(Long id) {
+        Nutriz entity = getEntity(id);
+        if (!NutrizStatus.ATIVA.equals(entity.getStatus())) {
+            throw new BusinessException("A nutriz informada está inativa");
+        }
+        return entity;
     }
 
     private void copy(NutrizRequest request, Nutriz entity) {
